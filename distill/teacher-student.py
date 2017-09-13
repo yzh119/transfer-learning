@@ -16,20 +16,22 @@ from teacher import *
 teacher = None
 student = None
 epochs = 5
-batch_size = 128
+batch_size = 64
 lr = 1e-3
 
 optimizer = None
 
 def train():
-    T = 20
+    T = 17
     student.train()
+    for p in teacher.parameters():
+        p.requires_grad = False
     for epoch in xrange(epochs):
         avg_loss = 0
         n_batches = len(transfer_loader)
-        for data, label in transfer_loader:
-            data, label = data.cuda(), label.cuda()
-            data, label = Variable(data), Variable(label)
+        for data, _ in transfer_loader:
+            data = data.cuda()
+            data = Variable(data)
             optimizer.zero_grad()
             output_teacher = F.softmax(teacher(data) / T)
             output_student = F.softmax(student(data) / T)
@@ -37,6 +39,7 @@ def train():
             loss.backward()
             optimizer.step()
             avg_loss += loss.data[0]
+            
         avg_loss /= n_batches
         print(avg_loss)
         
